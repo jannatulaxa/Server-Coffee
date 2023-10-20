@@ -115,6 +115,25 @@ async function run() {
 
 
 
+    // Card Data Product Section
+
+    // Insert Cart Data Into Database:
+    app.post("/cartProduct", async (req, res) => {
+      const addingCartProducts = req.body;
+      const result = await AddCartProductCollection.insertOne(
+        addingCartProducts
+      );
+      res.send(result);
+    });
+
+    // Read All Cart Product From Database:
+    app.get("/cartProduct", async (req, res) => {
+      const cursor = AddCartProductCollection.find();
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
+
 
    
     console.log(
