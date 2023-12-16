@@ -61,10 +61,12 @@ async function run() {
       res.send(result);
     });
     // Read Id Specific Review From Database:
-    app.get("/reviews/:id", async (req, res) => {
+    app.get("/reviewsGet/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await AddProductCollection.find(query).toArray();
+      const query = { proId:id };
+      console.log(query);
+      const result = await AddCartReviews.find(query).toArray();
+      console.log(result)
       res.send(result);
     });
 
