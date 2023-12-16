@@ -25,33 +25,48 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-   
-
     // Database For All Product Adding By Admin
     const AddProductCollection = client
       .db("AddCoffeeDB")
       .collection("Products");
     // Database For Add Product in the cart
-    const AddCartProductCollection = client.db("CartCoffeeDB").collection("CartData");
+    const AddCartProductCollection = client
+      .db("CartCoffeeDB")
+      .collection("CartData");
+    const AddCartReviews = client.db("CartCoffeeDB").collection("Reviews");
 
     // --------------------------------AddProductCollection Data Collection Server--------------------------------------
 
-      //<------------------Payments Info Database----------------->
+    //<------------------Payments Info Database----------------->
 
-      app.post("/create-payment-intent", async (req, res) => {
-        const { price } = req.body;
-        const amount = parseInt(price * 100);
-   
-        const paymentIntent = await stripe.paymentIntents.create({
-          amount: amount,
-          currency: "usd",
-          payment_method_types: ["card"],
-        });
-    
-        res.send({
-          clientSecret: paymentIntent.client_secret,
-        });
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
       });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    // Insert Reviews Data Into Database:
+    app.post("/reviews", async (req, res) => {
+      const Reviews = req.body;
+      const result = await AddCartReviews.insertOne(Reviews);
+      res.send(result);
+    });
+    // Read Id Specific Review From Database:
+    app.get("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await AddProductCollection.find(query).toArray();
+      res.send(result);
+    });
 
     // Insert General Data Into Database:
     app.post("/addProduct", async (req, res) => {
@@ -66,11 +81,17 @@ async function run() {
 
       res.send(result);
     });
+    // Read Id Specific General Product From Database:
+    app.get("/reviewProducts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await AddProductCollection.findOne(query);
+      res.send(result);
+    });
     // Read All General Product From Database:
     app.get("/addProducts", async (req, res) => {
       const cursor = AddProductCollection.find();
       const result = await cursor.toArray();
-
       res.send(result);
     });
     // Read All General Product From Database:
@@ -92,7 +113,6 @@ async function run() {
         const cursor = AddProductCollection.find(query);
         const result = await cursor.toArray();
         res.send(result);
-      
       } catch (error) {
         console.error("Error querying the database:", error);
         res.status(500).send("Internal Server Error");
@@ -117,21 +137,21 @@ async function run() {
       const updateDoc = {
         $set: {
           name: data.name,
-          brand_name:data.brand_name,
-          type:data.type,
-          price:data.price,
-          description:data.description,
-          rating:data.rating,
-          photo:data.photo,
+          brand_name: data.brand_name,
+          type: data.type,
+          price: data.price,
+          description: data.description,
+          rating: data.rating,
+          photo: data.photo,
         },
       };
-      const result = await AddProductCollection.updateOne(query, updateDoc, options);
+      const result = await AddProductCollection.updateOne(
+        query,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
-
-
-
-    // Card Data Product Section
 
     // Insert Cart Data Into Database:
     app.post("/cartProduct", async (req, res) => {
@@ -158,12 +178,11 @@ async function run() {
       const result = await AddCartProductCollection.deleteOne(query);
       res.send(result);
     });
-   
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
-   
   }
 }
 run().catch(console.dir);
