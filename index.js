@@ -64,9 +64,7 @@ async function run() {
     app.get("/reviewsGet/:id", async (req, res) => {
       const id = req.params.id;
       const query = { proId:id };
-      console.log(query);
       const result = await AddCartReviews.find(query).toArray();
-      console.log(result)
       res.send(result);
     });
 
